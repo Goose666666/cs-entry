@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>财税公司智能体平台</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; min-height: 100vh;
+    display: grid; place-items: center;
+    font: 15px/1.7 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: #f4f6f5; color: #1f2937;
+  }
+  @media (prefers-color-scheme: dark) { body { background: #16181a; color: #e6e8ea; } }
+  .box { text-align: center; padding: 28px 22px; max-width: 460px; }
+  .mark {
+    width: 40px; height: 40px; margin: 0 auto 16px;
+    border: 2px solid #9b2c2c; border-radius: 4px; color: #9b2c2c;
+    display: grid; place-items: center; font-size: 22px; font-weight: 700;
+  }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 8px; }
+  p { margin: 6px 0; color: #6b7280; font-size: 14px; }
+  a.go {
+    display: inline-block; margin-top: 16px; padding: 10px 22px;
+    background: #14456b; color: #fff; text-decoration: none; border-radius: 4px;
+  }
+  code { font-size: 12.5px; word-break: break-all; color: #6b7280; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="mark">财</div>
+  <h1>财税公司智能体平台</h1>
+  <p id="msg">正在跳转到平台，请稍候</p>
+  <a class="go" id="go" href="#" hidden>手动打开</a>
+  <p><code id="addr"></code></p>
+</div>
+<script>
+// 平台跑在临时隧道上，隧道地址会变。这一页地址固定，
+// 真正的地址存在 target.json 里，隧道一换就更新这个文件，
+// 所以外面只要记住这一个网址就行。
+fetch('target.json?t=' + Date.now())
+  .then(function (r) { return r.json(); })
+  .then(function (d) {
+    if (!d || !d.url) throw new Error('no url');
+    var u = d.url.replace(/\/$/, '') + '/web/app/index.html';
+    document.getElementById('addr').textContent = d.url;
+    var a = document.getElementById('go');
+    a.href = u; a.hidden = false;
+    location.replace(u);
+  })
+  .catch(function () {
+    document.getElementById('msg').textContent =
+      '平台暂时连不上，可能正在重启，请过一两分钟再刷新这一页。';
+  });
+</script>
+</body>
+</html>
