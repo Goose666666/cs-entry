@@ -27,6 +27,8 @@
     background: #14456b; color: #fff; text-decoration: none; border-radius: 4px;
   }
   code { font-size: 12.5px; word-break: break-all; color: #6b7280; }
+  /* 平台跑在临时隧道上，地址会变，所以要提醒收藏这一页而不是跳转后的地址 */
+  .tip { margin-top: 18px; font-size: 13px; color: #9ca3af; line-height: 1.7; }
 </style>
 </head>
 <body>
@@ -35,6 +37,7 @@
   <h1>财税公司智能体平台</h1>
   <p id="msg">正在跳转到平台，请稍候</p>
   <a class="go" id="go" href="#" hidden>手动打开</a>
+  <p class="tip">请收藏本页。跳转后地址栏显示的是临时地址，会定期更换，收藏了过几小时就打不开。</p>
   <p><code id="addr"></code></p>
 </div>
 <script>
@@ -49,7 +52,9 @@ fetch('target.json?t=' + Date.now())
     document.getElementById('addr').textContent = d.url;
     var a = document.getElementById('go');
     a.href = u; a.hidden = false;
-    location.replace(u);
+    // 停两秒再跳，让人看清该收藏的是这一页
+    document.getElementById('msg').textContent = '正在跳转到平台';
+    setTimeout(function () { location.replace(u); }, 1800);
   })
   .catch(function () {
     document.getElementById('msg').textContent =
