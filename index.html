@@ -44,22 +44,46 @@
 // 平台跑在临时隧道上，隧道地址会变。这一页地址固定，
 // 真正的地址存在 target.json 里，隧道一换就更新这个文件，
 // 所以外面只要记住这一个网址就行。
-fetch('target.json?t=' + Date.now())
-  .then(function (r) { return r.json(); })
-  .then(function (d) {
-    if (!d || !d.url) throw new Error('no url');
-    var u = d.url.replace(/\/$/, '') + '/web/app/index.html';
-    document.getElementById('addr').textContent = d.url;
-    var a = document.getElementById('go');
-    a.href = u; a.hidden = false;
-    // 停两秒再跳，让人看清该收藏的是这一页
-    document.getElementById('msg').textContent = '正在跳转到平台';
-    setTimeout(function () { location.replace(u); }, 1800);
-  })
-  .catch(function () {
-    document.getElementById('msg').textContent =
-      '平台暂时连不上，可能正在重启，请过一两分钟再刷新这一页。';
-  });
+//
+// 同一个文件从两个地方取。
+//
+// GitHub Pages 这一份走 CDN，推上去之后要等它自己刷新，实测能卡十几分钟，
+// 这段时间里它给的还是上一个地址，人点进去看到的是 Cloudflare 的 1033 错误页。
+// raw.githubusercontent 那一份推完就是新的，但国内不一定连得上。
+//
+// 所以两边一起要，谁先回来先用，两边都回来就用时间戳新的那个。
+// 谁也连不上才报错。
+var RAW = 'https://raw.githubusercontent.com/Goose666666/cs-entry/main/target.json';
+var done = false;
+
+function grab(url) {
+  return fetch(url + '?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { return (d && d.url) ? d : null; })
+    .catch(function () { return null; });
+}
+
+function jump(d) {
+  if (done) return;
+  done = true;
+  var u = d.url.replace(/\/$/, '') + '/web/app/index.html';
+  document.getElementById('addr').textContent = d.url;
+  var a = document.getElementById('go');
+  a.href = u; a.hidden = false;
+  // 停两秒再跳，让人看清该收藏的是这一页
+  document.getElementById('msg').textContent = '正在跳转到平台';
+  setTimeout(function () { location.replace(u); }, 1800);
+}
+
+Promise.all([grab('target.json'), grab(RAW)]).then(function (rs) {
+  var a = rs[0], b = rs[1];
+  var pick = null;
+  if (a && b) pick = (String(b.updated || '') > String(a.updated || '')) ? b : a;
+  else pick = a || b;
+  if (pick) jump(pick);
+  else document.getElementById('msg').textContent =
+    '平台暂时连不上，可能正在重启，请过一两分钟再刷新这一页。';
+});
 </script>
 </body>
 </html>
